@@ -9,19 +9,8 @@ jobs:
   fetch-and-save-cloud-api-spec:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
     steps:
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ vars.RP_AWS_CRED_REGION }}
-          role-to-assume: arn:aws:iam::${{ secrets.RP_AWS_CRED_ACCOUNT_ID }}:role/${{ vars.RP_AWS_CRED_BASE_ROLE_NAME }}${{ github.event.repository.name }}
-      - uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            ,sdlc/prod/github/actions_bot_token
-          parse-json-secrets: true
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -32,7 +21,7 @@ jobs:
         with:
           ref: 'api'
           path: redpanda-docs
-          token: ${{ env.ACTIONS_BOT_TOKEN }}
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
 
       - name: Get commit SHA and build URL
         id: commit-info
@@ -53,12 +42,12 @@ jobs:
           node fetch.js redpanda-data cloudv2 proto/gen/openapi/openapi.controlplane.prod.yaml ../../modules/ROOT/attachments cloud-controlplane-api.yaml
           node fetch.js redpanda-data cloudv2 proto/gen/openapi/openapi.dataplane.prod.yaml ../../modules/ROOT/attachments cloud-dataplane-api.yaml
         env:
-          VBOT_GITHUB_API_TOKEN: ${{ env.ACTIONS_BOT_TOKEN }}
+          VBOT_GITHUB_API_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "auto-docs: Update Cloud API spec"
-          token: ${{ env.ACTIONS_BOT_TOKEN }}
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
           path: redpanda-docs
           branch: update-branch-api
           title: "auto-docs: Update Cloud API spec"
